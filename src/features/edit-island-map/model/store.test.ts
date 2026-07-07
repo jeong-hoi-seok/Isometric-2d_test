@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import { defaultIslandMap, toPlaceableSet } from '../../../entities/island-map';
-import { cellsInEllipse } from '../../../shared/lib/iso/grid';
+import { cellsInEllipse, fitGridToMask } from '../../../shared/lib/iso/grid';
 import { useMapStore } from './store';
 
 const initialState = useMapStore.getState();
@@ -16,11 +16,9 @@ describe('useMapStore', () => {
     expect(placeable.size).toBe(defaultIslandMap.placeable.length);
   });
 
-  it('setGridParam 부분 갱신', () => {
-    useMapStore.getState().setGridParam({ tileW: 120 });
-    const { grid } = useMapStore.getState();
-    expect(grid.tileW).toBe(120);
-    expect(grid.cols).toBe(defaultIslandMap.grid.cols);
+  it('setGridN 갱신', () => {
+    useMapStore.getState().setGridN(16);
+    expect(useMapStore.getState().gridN).toBe(16);
   });
 
   it('paintCell true로 추가, false로 제거', () => {
@@ -50,13 +48,13 @@ describe('ellipseMask', () => {
     expect(ellipseMask.cy).toBe(550);
   });
 
-  it('applyEllipseMask가 placeable을 타원 내부 칸으로 교체', () => {
-    useMapStore.getState().setEllipseMask({ cx: 825, cy: 550, rx: 300, ry: 200 });
+  it('applyEllipseMask가 grid를 마스크에 맞춰 유도하고 placeable 교체', () => {
+    useMapStore.getState().setGridN(20);
     useMapStore.getState().applyEllipseMask();
-    const { grid, placeable, ellipseMask } = useMapStore.getState();
+    const { grid, placeable, ellipseMask, gridN } = useMapStore.getState();
+    expect(grid).toEqual(fitGridToMask(ellipseMask, gridN));
     const expected = toPlaceableSet(cellsInEllipse(grid, ellipseMask));
     expect(placeable).toEqual(expected);
     expect(placeable.size).toBeGreaterThan(0);
-    expect(placeable.size).toBeLessThan(grid.cols * grid.rows);
   });
 });

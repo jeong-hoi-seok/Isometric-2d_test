@@ -55,6 +55,18 @@ export interface EllipseMask {
   ry: number;
 }
 
+/** 타원 마스크를 꽉 채우는 n×n 그리드 유도 */
+export function fitGridToMask(mask: EllipseMask, n: number): GridParams {
+  const tileW = Math.max((2 * mask.rx) / n, (4 * mask.ry) / n);
+  return {
+    originX: mask.cx,
+    originY: mask.cy - (n * tileW) / 4,
+    tileW,
+    cols: n,
+    rows: n,
+  };
+}
+
 /** 칸 중심이 타원 내부(경계 포함)인 칸 목록 */
 export function cellsInEllipse(p: GridParams, mask: EllipseMask): [number, number][] {
   const th = tileHeight(p);
