@@ -17,6 +17,21 @@ export function EditorPage() {
   const [copied, setCopied] = useState(false);
   // 드래그 페인트: pointerdown 첫 칸의 반전값을 목표값으로 고정
   const paintValueRef = useRef<boolean | null>(null);
+  const copiedTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (copiedTimerRef.current !== null) clearTimeout(copiedTimerRef.current);
+    };
+  }, []);
+
+  useEffect(() => {
+    const reset = () => {
+      paintValueRef.current = null;
+    };
+    window.addEventListener('pointerup', reset);
+    return () => window.removeEventListener('pointerup', reset);
+  }, []);
 
   useEffect(() => {
     loadImage('/assets/island.png')
@@ -38,16 +53,20 @@ export function EditorPage() {
   }
 
   async function handleExport() {
-    await navigator.clipboard.writeText(serializeIslandMap(grid, placeable));
-    setCopied(true);
-    setTimeout(() => setCopied(false), 1500);
+    try {
+      await navigator.clipboard.writeText(serializeIslandMap(grid, placeable));
+      setCopied(true);
+      copiedTimerRef.current = setTimeout(() => setCopied(false), 1500);
+    } catch {
+      alert('클립보드 복사에 실패했습니다. 직접 붙여넣기 해주세요.');
+    }
   }
 
   if (error) return <p>{error}</p>;
   if (!islandImg) return <p>이미지 로딩 중…</p>;
 
   return (
-    <main onPointerUp={() => (paintValueRef.current = null)}>
+    <main>
       <h1>맵 에디터</h1>
       <p>
         슬라이더로 그리드를 섬 상판에 정렬하고, 칸을 클릭/드래그해 배치 가능 영역을 마킹한 뒤
