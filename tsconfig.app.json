@@ -8,9 +8,7 @@
     "allowArbitraryExtensions": true,
     "skipLibCheck": true,
     "resolveJsonModule": true,
-    "baseUrl": ".",
     "paths": { "@/*": ["./src/*"] },
-    "ignoreDeprecations": "6.0",
 
     /* Bundler mode */
     "moduleResolution": "bundler",
