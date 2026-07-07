@@ -19,12 +19,12 @@ export function PlacementPanel() {
     <div className="flex flex-col gap-4">
       <Card>
         <CardHeader>
-          <CardTitle>에셋 개수</CardTitle>
+          <CardTitle>오브젝트 에셋</CardTitle>
         </CardHeader>
         <CardContent className="flex flex-col gap-3">
           {ASSETS.map((asset) => (
             <label key={asset.id} className="flex items-center justify-between gap-2 text-sm">
-              <span className="capitalize">{asset.id}</span>
+              <span>{asset.label}</span>
               <Input
                 type="number"
                 min={0}

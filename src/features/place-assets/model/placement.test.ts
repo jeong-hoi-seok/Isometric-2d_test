@@ -4,7 +4,7 @@ import { toPlaceableSet } from '../../../entities/island-map';
 import { placeAssets } from './placement';
 
 function asset(id: string, w: number, h: number): AssetDef {
-  return { id, src: `/assets/${id}.png`, footprint: { w, h }, defaultCount: 1, scale: 1 };
+  return { id, label: id, src: `/assets/${id}.png`, footprint: { w, h }, defaultCount: 1, scale: 1 };
 }
 
 /** 고정 수열을 순환 반환하는 결정적 RNG */
