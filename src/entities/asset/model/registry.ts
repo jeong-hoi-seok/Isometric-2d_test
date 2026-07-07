@@ -1,5 +1,7 @@
 export interface AssetDef {
   id: string;
+  /** UI 표시용 한글 이름 */
+  label: string;
   src: string;
   footprint: { w: number; h: number };
   defaultCount: number;
@@ -8,10 +10,10 @@ export interface AssetDef {
 }
 
 export const ASSETS: AssetDef[] = [
-  { id: 'home', src: '/assets/home.png', footprint: { w: 2, h: 2 }, defaultCount: 2, scale: 1 },
-  { id: 'home2', src: '/assets/home2.png', footprint: { w: 2, h: 2 }, defaultCount: 1, scale: 1 },
-  { id: 'fountain', src: '/assets/fountain.png', footprint: { w: 2, h: 2 }, defaultCount: 1, scale: 1 },
-  { id: 'tree', src: '/assets/tree.png', footprint: { w: 1, h: 1 }, defaultCount: 5, scale: 1 },
-  { id: 'tree2', src: '/assets/tree2.png', footprint: { w: 1, h: 1 }, defaultCount: 3, scale: 1.2 },
-  { id: 'character', src: '/assets/character.png', footprint: { w: 1, h: 1 }, defaultCount: 3, scale: 0.8 },
+  { id: 'home', label: '집', src: '/assets/home.png', footprint: { w: 2, h: 2 }, defaultCount: 1, scale: 1 },
+  { id: 'home2', label: '집2', src: '/assets/home2.png', footprint: { w: 2, h: 2 }, defaultCount: 1, scale: 1 },
+  { id: 'fountain', label: '분수', src: '/assets/fountain.png', footprint: { w: 2, h: 2 }, defaultCount: 1, scale: 1 },
+  { id: 'tree', label: '나무', src: '/assets/tree.png', footprint: { w: 1, h: 1 }, defaultCount: 1, scale: 1 },
+  { id: 'tree2', label: '나무2', src: '/assets/tree2.png', footprint: { w: 1, h: 1 }, defaultCount: 1, scale: 1.2 },
+  { id: 'character', label: '캐릭터', src: '/assets/character.png', footprint: { w: 1, h: 1 }, defaultCount: 1, scale: 0.8 },
 ];
