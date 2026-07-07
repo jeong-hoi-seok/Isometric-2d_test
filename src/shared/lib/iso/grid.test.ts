@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { cellDiamond, gridToScreen, isInside, screenToGrid, tileHeight } from './grid';
+import { cellDiamond, cellsInEllipse, gridToScreen, isInside, screenToGrid, tileHeight } from './grid';
 
 const p = { originX: 100, originY: 50, tileW: 64, cols: 10, rows: 8 };
 
@@ -53,5 +53,28 @@ describe('cellDiamond', () => {
       { x: 100, y: 82 },
       { x: 68, y: 66 },
     ]);
+  });
+});
+
+describe('cellsInEllipse', () => {
+  const small = { originX: 100, originY: 50, tileW: 64, cols: 4, rows: 4 };
+
+  it('칸 중심 하나만 덮는 작은 타원', () => {
+    // (1,1) 칸 중심 = (100, 98)
+    expect(cellsInEllipse(small, { cx: 100, cy: 98, rx: 10, ry: 10 })).toEqual([[1, 1]]);
+  });
+
+  it('거대 타원은 전 칸 포함', () => {
+    expect(cellsInEllipse(small, { cx: 100, cy: 100, rx: 10000, ry: 10000 })).toHaveLength(16);
+  });
+
+  it('멀리 있는 타원은 빈 배열', () => {
+    expect(cellsInEllipse(small, { cx: -5000, cy: -5000, rx: 10, ry: 10 })).toEqual([]);
+  });
+
+  it('경계값 포함(<=1)', () => {
+    // (2,2) 칸 중심 = (100, 130). cy 98에서 dy=32 → ry 32면 정확히 경계
+    const cells = cellsInEllipse(small, { cx: 100, cy: 98, rx: 5, ry: 32 });
+    expect(cells).toContainEqual([2, 2]);
   });
 });

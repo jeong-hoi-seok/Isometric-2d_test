@@ -6,6 +6,7 @@ import {
   cellDiamond,
   isInside,
   screenToGrid,
+  type EllipseMask,
   type GridParams,
 } from '../../../shared/lib/iso/grid';
 import { assetDrawRect } from '../model/asset-rect';
@@ -19,6 +20,10 @@ interface Props {
   showGrid?: boolean;
   /** 에디터: 배치 가능 칸 하이라이트 */
   placeableSet?: Set<string>;
+  /** 에디터: 비placeable 후보 칸도 흐리게 표시 */
+  showCandidates?: boolean;
+  /** 에디터: 타원 마스크 윤곽 미리보기 */
+  ellipsePreview?: EllipseMask;
   /** 에디터: 클릭·드래그로 지나간 칸 (col,row) 콜백 */
   onCellPaint?: (col: number, row: number) => void;
 }
@@ -31,6 +36,8 @@ export function IslandCanvas({
   assets,
   showGrid = false,
   placeableSet,
+  showCandidates = false,
+  ellipsePreview,
   onCellPaint,
 }: Props) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -47,7 +54,8 @@ export function IslandCanvas({
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     ctx.drawImage(islandImg, 0, 0);
 
-    if (showGrid) drawGridOverlay(ctx, grid, placeableSet);
+    if (showGrid) drawGridOverlay(ctx, grid, placeableSet, showCandidates);
+    if (ellipsePreview) drawEllipsePreview(ctx, ellipsePreview);
 
     for (const placement of placements) {
       const img = assetImgs[placement.assetId];
@@ -98,10 +106,13 @@ export function IslandCanvas({
 function drawGridOverlay(
   ctx: CanvasRenderingContext2D,
   grid: GridParams,
-  placeableSet?: Set<string>,
+  placeableSet: Set<string> | undefined,
+  showCandidates: boolean,
 ) {
   for (let col = 0; col < grid.cols; col++) {
     for (let row = 0; row < grid.rows; row++) {
+      const isPlaceable = placeableSet?.has(cellKey(col, row)) ?? false;
+      if (!isPlaceable && !showCandidates) continue;
       const [top, right, bottom, left] = cellDiamond(grid, col, row);
       ctx.beginPath();
       ctx.moveTo(top.x, top.y);
@@ -109,13 +120,24 @@ function drawGridOverlay(
       ctx.lineTo(bottom.x, bottom.y);
       ctx.lineTo(left.x, left.y);
       ctx.closePath();
-      if (placeableSet?.has(cellKey(col, row))) {
+      if (isPlaceable && showCandidates) {
         ctx.fillStyle = 'rgba(46, 204, 113, 0.35)';
         ctx.fill();
       }
-      ctx.strokeStyle = 'rgba(0, 0, 0, 0.25)';
+      ctx.strokeStyle = isPlaceable ? 'rgba(0, 0, 0, 0.3)' : 'rgba(0, 0, 0, 0.08)';
       ctx.lineWidth = 1;
       ctx.stroke();
     }
   }
+}
+
+function drawEllipsePreview(ctx: CanvasRenderingContext2D, mask: EllipseMask) {
+  ctx.save();
+  ctx.beginPath();
+  ctx.ellipse(mask.cx, mask.cy, mask.rx, mask.ry, 0, 0, Math.PI * 2);
+  ctx.strokeStyle = 'rgba(255, 255, 255, 0.85)';
+  ctx.lineWidth = 3;
+  ctx.setLineDash([12, 8]);
+  ctx.stroke();
+  ctx.restore();
 }

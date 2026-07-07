@@ -1,10 +1,17 @@
 import { useEffect, useRef, useState } from 'react';
-import type { GridParams } from '../../../shared/lib/iso/grid';
+import type { EllipseMask, GridParams } from '../../../shared/lib/iso/grid';
 import { serializeIslandMap } from '../model/serialize';
 import { useMapStore } from '../model/store';
 import { Button } from '@/shared/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card';
 import { Slider } from '@/shared/ui/slider';
+
+const MASK_SLIDERS: { key: keyof EllipseMask; label: string; min: number; max: number; step: number }[] = [
+  { key: 'cx', label: '중심X', min: 0, max: 2000, step: 1 },
+  { key: 'cy', label: '중심Y', min: 0, max: 1500, step: 1 },
+  { key: 'rx', label: '반지름가로', min: 50, max: 1000, step: 5 },
+  { key: 'ry', label: '반지름세로', min: 50, max: 800, step: 5 },
+];
 
 const SLIDERS: { key: keyof GridParams; min: number; max: number; step: number }[] = [
   { key: 'originX', min: 0, max: 2000, step: 1 },
@@ -17,7 +24,10 @@ const SLIDERS: { key: keyof GridParams; min: number; max: number; step: number }
 export function GridPanel() {
   const grid = useMapStore((s) => s.grid);
   const placeable = useMapStore((s) => s.placeable);
+  const ellipseMask = useMapStore((s) => s.ellipseMask);
   const setGridParam = useMapStore((s) => s.setGridParam);
+  const setEllipseMask = useMapStore((s) => s.setEllipseMask);
+  const applyEllipseMask = useMapStore((s) => s.applyEllipseMask);
   const [copied, setCopied] = useState(false);
   const copiedTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -59,6 +69,32 @@ export function GridPanel() {
               />
             </div>
           ))}
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>타원 마스크</CardTitle>
+        </CardHeader>
+        <CardContent className="flex flex-col gap-4">
+          {MASK_SLIDERS.map(({ key, label, min, max, step }) => (
+            <div key={key} className="flex flex-col gap-1">
+              <div className="flex justify-between text-sm">
+                <span>{label}</span>
+                <span className="text-muted-foreground">{ellipseMask[key]}</span>
+              </div>
+              <Slider
+                min={min}
+                max={max}
+                step={step}
+                value={[ellipseMask[key]]}
+                onValueChange={([value]) => setEllipseMask({ [key]: value })}
+              />
+            </div>
+          ))}
+          <Button variant="secondary" onClick={applyEllipseMask}>
+            타원 적용
+          </Button>
         </CardContent>
       </Card>
 

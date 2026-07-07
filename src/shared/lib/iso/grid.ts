@@ -47,3 +47,25 @@ export function cellDiamond(p: GridParams, col: number, row: number): [Point, Po
     { x: top.x - p.tileW / 2, y: top.y + th / 2 },
   ];
 }
+
+export interface EllipseMask {
+  cx: number;
+  cy: number;
+  rx: number;
+  ry: number;
+}
+
+/** 칸 중심이 타원 내부(경계 포함)인 칸 목록 */
+export function cellsInEllipse(p: GridParams, mask: EllipseMask): [number, number][] {
+  const th = tileHeight(p);
+  const cells: [number, number][] = [];
+  for (let col = 0; col < p.cols; col++) {
+    for (let row = 0; row < p.rows; row++) {
+      const top = gridToScreen(p, col, row);
+      const dx = (top.x - mask.cx) / mask.rx;
+      const dy = (top.y + th / 2 - mask.cy) / mask.ry;
+      if (dx * dx + dy * dy <= 1) cells.push([col, row]);
+    }
+  }
+  return cells;
+}
