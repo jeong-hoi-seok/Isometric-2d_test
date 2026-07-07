@@ -30,9 +30,8 @@ describe('usePlacementStore', () => {
 
   it('runPlacement가 placements·failedCount 갱신', () => {
     const { setCount, runPlacement } = usePlacementStore.getState();
-    setCount('home', 0);
+    for (const asset of ASSETS) setCount(asset.id, 0);
     setCount('tree', 1);
-    setCount('character', 0);
     runPlacement(toPlaceableSet([[3, 3]]), () => 0);
     const { placements, failedCount } = usePlacementStore.getState();
     expect(placements).toEqual([
