@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { cellDiamond, cellsInEllipse, gridToScreen, isInside, screenToGrid, tileHeight } from './grid';
+import { cellDiamond, cellsInEllipse, fitGridToMask, gridToScreen, isInside, screenToGrid, tileHeight } from './grid';
 
 const p = { originX: 100, originY: 50, tileW: 64, cols: 10, rows: 8 };
 
@@ -76,5 +76,32 @@ describe('cellsInEllipse', () => {
     // (2,2) 칸 중심 = (100, 130). cy 98에서 dy=32 → ry 32면 정확히 경계
     const cells = cellsInEllipse(small, { cx: 100, cy: 98, rx: 5, ry: 32 });
     expect(cells).toContainEqual([2, 2]);
+  });
+});
+
+describe('fitGridToMask', () => {
+  it('가로 반지름이 지배하면 tileW = 2rx/n', () => {
+    // rx 700, ry 300, n 20 → max(70, 60) = 70
+    expect(fitGridToMask({ cx: 800, cy: 500, rx: 700, ry: 300 }, 20)).toEqual({
+      originX: 800,
+      originY: 500 - (20 * 70) / 4,
+      tileW: 70,
+      cols: 20,
+      rows: 20,
+    });
+  });
+
+  it('세로 반지름이 지배하면 tileW = 4ry/n', () => {
+    // rx 700, ry 430, n 20 → max(70, 86) = 86
+    const grid = fitGridToMask({ cx: 825, cy: 550, rx: 700, ry: 430 }, 20);
+    expect(grid.tileW).toBe(86);
+    expect(grid.originY).toBe(550 - (20 * 86) / 4); // 120
+  });
+
+  it('마름모가 타원을 포함한다 (반폭·반높이 >= 반지름)', () => {
+    const mask = { cx: 0, cy: 0, rx: 333, ry: 217 };
+    const grid = fitGridToMask(mask, 13);
+    expect((grid.cols * grid.tileW) / 2).toBeGreaterThanOrEqual(mask.rx);
+    expect((grid.rows * grid.tileW) / 4).toBeGreaterThanOrEqual(mask.ry);
   });
 });

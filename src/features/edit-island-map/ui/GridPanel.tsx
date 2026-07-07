@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import type { EllipseMask, GridParams } from '../../../shared/lib/iso/grid';
+import type { EllipseMask } from '../../../shared/lib/iso/grid';
 import { serializeIslandMap } from '../model/serialize';
 import { useMapStore } from '../model/store';
 import { Button } from '@/shared/ui/button';
@@ -13,19 +13,12 @@ const MASK_SLIDERS: { key: keyof EllipseMask; label: string; min: number; max: n
   { key: 'ry', label: '반지름세로', min: 50, max: 800, step: 5 },
 ];
 
-const SLIDERS: { key: keyof GridParams; min: number; max: number; step: number }[] = [
-  { key: 'originX', min: 0, max: 2000, step: 1 },
-  { key: 'originY', min: 0, max: 1500, step: 1 },
-  { key: 'tileW', min: 20, max: 300, step: 2 },
-  { key: 'cols', min: 4, max: 40, step: 1 },
-  { key: 'rows', min: 4, max: 40, step: 1 },
-];
-
 export function GridPanel() {
   const grid = useMapStore((s) => s.grid);
   const placeable = useMapStore((s) => s.placeable);
   const ellipseMask = useMapStore((s) => s.ellipseMask);
-  const setGridParam = useMapStore((s) => s.setGridParam);
+  const gridN = useMapStore((s) => s.gridN);
+  const setGridN = useMapStore((s) => s.setGridN);
   const setEllipseMask = useMapStore((s) => s.setEllipseMask);
   const applyEllipseMask = useMapStore((s) => s.applyEllipseMask);
   const [copied, setCopied] = useState(false);
@@ -51,29 +44,6 @@ export function GridPanel() {
     <div className="flex flex-col gap-4">
       <Card>
         <CardHeader>
-          <CardTitle>그리드 캘리브레이션</CardTitle>
-        </CardHeader>
-        <CardContent className="flex flex-col gap-4">
-          {SLIDERS.map(({ key, min, max, step }) => (
-            <div key={key} className="flex flex-col gap-1">
-              <div className="flex justify-between text-sm">
-                <span>{key}</span>
-                <span className="text-muted-foreground">{grid[key]}</span>
-              </div>
-              <Slider
-                min={min}
-                max={max}
-                step={step}
-                value={[grid[key]]}
-                onValueChange={([value]) => setGridParam({ [key]: value })}
-              />
-            </div>
-          ))}
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
           <CardTitle>타원 마스크</CardTitle>
         </CardHeader>
         <CardContent className="flex flex-col gap-4">
@@ -92,6 +62,19 @@ export function GridPanel() {
               />
             </div>
           ))}
+          <div className="flex flex-col gap-1">
+            <div className="flex justify-between text-sm">
+              <span>칸수 (n×n)</span>
+              <span className="text-muted-foreground">{gridN}</span>
+            </div>
+            <Slider
+              min={8}
+              max={40}
+              step={1}
+              value={[gridN]}
+              onValueChange={([value]) => setGridN(value)}
+            />
+          </div>
           <Button variant="secondary" onClick={applyEllipseMask}>
             타원 적용
           </Button>

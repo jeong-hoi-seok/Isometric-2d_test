@@ -84,7 +84,7 @@ export function IslandCanvas({
   return (
     <canvas
       ref={canvasRef}
-      className="block h-auto max-h-[calc(100vh-3rem)] w-auto max-w-full"
+      className="block h-auto max-h-[80vh] w-auto max-w-full"
       style={{ touchAction: 'none' }}
       onPointerDown={(e) => {
         paintingRef.current = true;
