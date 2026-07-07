@@ -18,6 +18,7 @@ export function DashboardPage() {
   const [activeTab, setActiveTab] = useState<AsideTab>('place');
   const grid = useMapStore((s) => s.grid);
   const placeable = useMapStore((s) => s.placeable);
+  const ellipseMask = useMapStore((s) => s.ellipseMask);
   const paintCell = useMapStore((s) => s.paintCell);
   const placements = usePlacementStore((s) => s.placements);
   const showGrid = usePlacementStore((s) => s.showGrid);
@@ -72,7 +73,9 @@ export function DashboardPage() {
             placements={placements}
             assets={ASSETS}
             showGrid={isGridTab || showGrid}
-            placeableSet={isGridTab ? placeable : undefined}
+            placeableSet={placeable}
+            showCandidates={isGridTab}
+            ellipsePreview={isGridTab ? ellipseMask : undefined}
             onCellPaint={isGridTab ? handleCellPaint : undefined}
           />
         )}
