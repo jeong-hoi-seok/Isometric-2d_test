@@ -18,7 +18,7 @@ export const CHARACTER: AssetDef = {
   id: 'character',
   label: '캐릭터',
   src: '/assets/character.png',
-  footprint: { w: 1, h: 1 },
+  footprint: { w: 2, h: 2 },
   defaultCount: 1,
-  scale: 0.8,
+  scale: 1,
 };

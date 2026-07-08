@@ -135,7 +135,7 @@ function drawEllipsePreview(ctx: CanvasRenderingContext2D, mask: EllipseMask) {
   ctx.save();
   ctx.beginPath();
   ctx.ellipse(mask.cx, mask.cy, mask.rx, mask.ry, 0, 0, Math.PI * 2);
-  ctx.strokeStyle = 'rgba(255, 255, 255, 0.85)';
+  ctx.strokeStyle = 'rgba(30, 30, 30, 0.65)';
   ctx.lineWidth = 3;
   ctx.setLineDash([12, 8]);
   ctx.stroke();
