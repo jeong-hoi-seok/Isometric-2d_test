@@ -39,6 +39,24 @@ export const ASSETS: AssetDef[] = [
     scale: 1,
     placement: { zone: { min: 0.35, max: 1 }, cluster: { min: 2, max: 4, radius: 2 } },
   },
+  {
+    id: 'toast',
+    label: '토스트',
+    src: '/assets/toast.png',
+    footprint: { w: 2, h: 2 },
+    defaultCount: 1,
+    scale: 1,
+    placement: { zone: { min: 0.35, max: 1 }, cluster: { min: 2, max: 4, radius: 2 } },
+  },
+  {
+    id: 'electric-fan',
+    label: '선풍기',
+    src: '/assets/electric-fan.png',
+    footprint: { w: 2, h: 2 },
+    defaultCount: 1,
+    scale: 1,
+    placement: { zone: { min: 0.35, max: 1 }, cluster: { min: 2, max: 4, radius: 2 } },
+  },
 ]
 
 export const CHARACTER: AssetDef = {
