@@ -3,12 +3,16 @@ import { ASSETS } from '../../../entities/asset';
 import { defaultIslandMap } from '../../../entities/island-map';
 import type { EllipseMask, GridParams } from '../../../shared/lib/iso/grid';
 import { characterPlacement, placeAssets, type Placement } from './placement';
+import { fetchAiPlacements, repairPlacements } from './ai-place';
+
+type AiStatus = 'idle' | 'loading' | 'fallback';
 
 interface PlacementState {
   counts: Record<string, number>;
   placements: Placement[];
   failedCount: number;
   showGrid: boolean;
+  aiStatus: AiStatus;
   setCount: (id: string, count: number) => void;
   toggleGrid: () => void;
   runPlacement: (
@@ -17,6 +21,11 @@ interface PlacementState {
     mask: EllipseMask,
     random?: () => number,
   ) => void;
+  runAiPlacement: (
+    placeable: Set<string>,
+    grid: GridParams,
+    mask: EllipseMask,
+  ) => Promise<void>;
 }
 
 export const usePlacementStore = create<PlacementState>((set, get) => ({
@@ -24,6 +33,7 @@ export const usePlacementStore = create<PlacementState>((set, get) => ({
   placements: [characterPlacement(defaultIslandMap.grid)],
   failedCount: 0,
   showGrid: false,
+  aiStatus: 'idle',
   setCount: (id, count) =>
     set((state) => ({ counts: { ...state.counts, [id]: count } })),
   toggleGrid: () => set((state) => ({ showGrid: !state.showGrid })),
@@ -35,5 +45,63 @@ export const usePlacementStore = create<PlacementState>((set, get) => ({
     const fixed = [characterPlacement(grid)];
     const result = placeAssets(placeable, requests, random, fixed, { grid, mask });
     set({ placements: result.placements, failedCount: result.failedCount });
+  },
+  runAiPlacement: async (placeable, grid, mask) => {
+    set({ aiStatus: 'loading' });
+
+    const counts = get().counts;
+    const fixed = [characterPlacement(grid)];
+
+    // 씬 요약 빌드
+    const placeablePairs: [number, number][] = [...placeable].map(
+      (key) => key.split(',').map(Number) as [number, number],
+    );
+    const assetsForScene = ASSETS.filter((a) => (counts[a.id] ?? 0) > 0).map((a) => ({
+      id: a.id,
+      count: counts[a.id] ?? 0,
+      footprint: a.footprint,
+      zone: a.placement?.zone,
+    }));
+    const scene = {
+      grid,
+      mask,
+      placeable: placeablePairs,
+      assets: assetsForScene,
+      fixed: fixed.map((f) => ({ col: f.col, row: f.row, footprint: f.footprint })),
+    };
+
+    try {
+      // 8초 타임아웃
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 8000);
+
+      let rawPlacements: { assetId: string; col: number; row: number }[];
+      try {
+        rawPlacements = await fetchAiPlacements(scene, controller.signal);
+      } finally {
+        clearTimeout(timeoutId);
+      }
+
+      // requests를 repairPlacements 형식으로 변환
+      const requests = ASSETS.map((a) => ({
+        assetId: a.id,
+        count: counts[a.id] ?? 0,
+        footprint: a.footprint,
+      }));
+
+      const result = repairPlacements(rawPlacements, {
+        placeable,
+        grid,
+        mask,
+        requests,
+        fixed,
+      });
+
+      set({ placements: result.placements, failedCount: result.failedCount, aiStatus: 'idle' });
+    } catch {
+      // 폴백: 로컬 룰렛 배치
+      get().runPlacement(placeable, grid, mask);
+      set({ aiStatus: 'fallback' });
+    }
   },
 }));
