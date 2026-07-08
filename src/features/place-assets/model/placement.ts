@@ -1,5 +1,7 @@
 import type { AssetDef } from '../../../entities/asset';
+import { CHARACTER } from '../../../entities/asset';
 import { cellKey } from '../../../entities/island-map';
+import type { GridParams } from '../../../shared/lib/iso/grid';
 
 export interface Placement {
   assetId: string;
@@ -15,15 +17,44 @@ export interface PlacementResult {
 
 const MAX_ATTEMPTS = 200;
 
+/** 그리드 중앙 칸 좌표 반환 */
+export function centerCell(grid: GridParams): { col: number; row: number } {
+  return {
+    col: Math.floor((grid.cols - 1) / 2),
+    row: Math.floor((grid.rows - 1) / 2),
+  };
+}
+
+/** CHARACTER를 그리드 중앙 칸에 고정 배치하는 Placement 반환 */
+export function characterPlacement(grid: GridParams): Placement {
+  const { col, row } = centerCell(grid);
+  return {
+    assetId: CHARACTER.id,
+    col,
+    row,
+    footprint: CHARACTER.footprint,
+  };
+}
+
 export function placeAssets(
   placeable: Set<string>,
   requests: { asset: AssetDef; count: number }[],
   random: () => number = Math.random,
+  fixed: Placement[] = [],
 ): PlacementResult {
   const cells = [...placeable].map((key) => key.split(',').map(Number) as [number, number]);
   const occupied = new Set<string>();
-  const placements: Placement[] = [];
+  const placements: Placement[] = [...fixed];
   let failedCount = 0;
+
+  // fixed 칸을 먼저 점유 처리 (placeable 여부 무관)
+  for (const fp of fixed) {
+    for (let dc = 0; dc < fp.footprint.w; dc++) {
+      for (let dr = 0; dr < fp.footprint.h; dr++) {
+        occupied.add(cellKey(fp.col + dc, fp.row + dr));
+      }
+    }
+  }
 
   // 큰 footprint 먼저 배치해 성공률 확보
   const instances = requests

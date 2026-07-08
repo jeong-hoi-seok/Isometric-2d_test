@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { ASSETS } from '../../../entities/asset';
+import { ASSETS, CHARACTER } from '../../../entities/asset';
 import { cellKey } from '../../../entities/island-map';
 import { useMapStore } from '../../../features/edit-island-map/model/store';
 import { usePlacementStore } from '../../../features/place-assets/model/store';
@@ -26,12 +26,13 @@ export function DashboardPage() {
 
   useEffect(() => {
     let cancelled = false;
-    Promise.all([loadImage('/assets/island.png'), ...ASSETS.map((a) => loadImage(a.src))])
+    const allAssets = [...ASSETS, CHARACTER];
+    Promise.all([loadImage('/assets/island.png'), ...allAssets.map((a) => loadImage(a.src))])
       .then(([island, ...assetImages]) => {
         if (cancelled) return;
         setImages({
           island,
-          byAssetId: Object.fromEntries(ASSETS.map((a, i) => [a.id, assetImages[i]])),
+          byAssetId: Object.fromEntries(allAssets.map((a, i) => [a.id, assetImages[i]])),
         });
       })
       .catch((e: Error) => {
@@ -71,7 +72,7 @@ export function DashboardPage() {
             assetImgs={images.byAssetId}
             grid={grid}
             placements={placements}
-            assets={ASSETS}
+            assets={[...ASSETS, CHARACTER]}
             showGrid={isGridTab || showGrid}
             placeableSet={placeable}
             showCandidates={isGridTab}
