@@ -18,6 +18,10 @@ export interface AssetDef {
   scale: number;
   /** 미적 배치 소프트 선호 — 없으면 균등 랜덤과 동일 */
   placement?: PlacementMeta;
+  /** 깊이 동률 타이브레이커. 기본 0. 클수록 앞에 그림 */
+  zBias?: number;
+  /** 렌더 레이어. 기본 'object'. 'ground'는 깊이 무관 항상 object 아래 렌더 */
+  layer?: 'ground' | 'object';
 }
 
 export const ASSETS: AssetDef[] = [

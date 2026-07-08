@@ -3,7 +3,7 @@ import { ASSETS } from '../../../entities/asset';
 import { cellKey } from '../../../entities/island-map';
 import type { EllipseMask, GridParams } from '../../../shared/lib/iso/grid';
 import { blockCenter, normalizedRadius, zoneScore } from './scoring';
-import { placeAssets, type Placement, type PlacementResult } from './placement';
+import { placeAssets, sortByDepth, type DepthMeta, type Placement, type PlacementResult } from './placement';
 
 // ---------------------------------------------------------------------------
 // AiScene — POST /api/place 요청 body 타입
@@ -31,6 +31,8 @@ export interface RepairContext {
   mask: EllipseMask;
   requests: RepairRequest[];
   fixed: Placement[];
+  /** 에셋별 깊이 제어 메타 — 없으면 zBias=0·layer='object' 취급 */
+  metaById?: Record<string, DepthMeta>;
 }
 
 // ---------------------------------------------------------------------------
@@ -100,7 +102,7 @@ export function repairPlacements(
   raw: { assetId: string; col: number; row: number }[],
   ctx: RepairContext,
 ): PlacementResult {
-  const { placeable, grid, mask, requests, fixed } = ctx;
+  const { placeable, grid, mask, requests, fixed, metaById = {} } = ctx;
 
   // 점유 집합 초기화 (fixed 칸 선점유)
   const occupied = new Set<string>();
@@ -227,18 +229,11 @@ export function repairPlacements(
     validShortfall.push({ asset: assetDef, count: need });
   }
 
-  const filled = placeAssets(placeable, validShortfall, Math.random, allFixed, { grid, mask });
+  const filled = placeAssets(placeable, validShortfall, Math.random, allFixed, { grid, mask }, metaById);
 
   // 단계 7: 병합 + 깊이 정렬 (fixed 제외, accepted + filled 결과 조합)
   // filled.placements에는 allFixed도 포함되어 있음
-  const merged = filled.placements;
-
-  // 깊이 정렬: col+w+row+h 오름차순
-  merged.sort(
-    (a, b) =>
-      a.col + a.footprint.w + a.row + a.footprint.h -
-      (b.col + b.footprint.w + b.row + b.footprint.h),
-  );
+  const merged = sortByDepth(filled.placements, metaById);
 
   return {
     placements: merged,

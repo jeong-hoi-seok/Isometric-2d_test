@@ -1,9 +1,15 @@
 import { create } from 'zustand';
-import { ASSETS } from '../../../entities/asset';
+import { ASSETS, CHARACTER } from '../../../entities/asset';
 import { defaultIslandMap } from '../../../entities/island-map';
 import type { EllipseMask, GridParams } from '../../../shared/lib/iso/grid';
 import { characterPlacement, placeAssets, type Placement } from './placement';
 import { fetchAiPlacements, repairPlacements } from './ai-place';
+
+/** 레지스트리 전체 에셋의 깊이 메타를 ID 맵으로 구성 */
+const ALL_ASSET_DEFS = [...ASSETS, CHARACTER];
+const META_BY_ID = Object.fromEntries(
+  ALL_ASSET_DEFS.map((a) => [a.id, { zBias: a.zBias, layer: a.layer }]),
+);
 
 type AiStatus = 'idle' | 'loading' | 'fallback';
 
@@ -43,7 +49,7 @@ export const usePlacementStore = create<PlacementState>((set, get) => ({
       count: get().counts[asset.id] ?? 0,
     }));
     const fixed = [characterPlacement(grid)];
-    const result = placeAssets(placeable, requests, random, fixed, { grid, mask });
+    const result = placeAssets(placeable, requests, random, fixed, { grid, mask }, META_BY_ID);
     set({ placements: result.placements, failedCount: result.failedCount });
   },
   runAiPlacement: async (placeable, grid, mask) => {
@@ -95,6 +101,7 @@ export const usePlacementStore = create<PlacementState>((set, get) => ({
         mask,
         requests,
         fixed,
+        metaById: META_BY_ID,
       });
 
       set({ placements: result.placements, failedCount: result.failedCount, aiStatus: 'idle' });
