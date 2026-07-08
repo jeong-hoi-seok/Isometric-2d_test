@@ -16,7 +16,7 @@ interface MapState {
 export const useMapStore = create<MapState>((set) => ({
   grid: defaultIslandMap.grid,
   placeable: toPlaceableSet(defaultIslandMap.placeable),
-  ellipseMask: { cx: 825, cy: 550, rx: 700, ry: 430 },
+  ellipseMask: { cx: 710, cy: 465, rx: 590, ry: 370 },
   gridN: 26,
   setGridN: (n) => set({ gridN: n }),
   paintCell: (col, row, target) =>

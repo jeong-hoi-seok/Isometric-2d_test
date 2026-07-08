@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import type { AssetDef } from '../../../entities/asset';
 import { toPlaceableSet } from '../../../entities/island-map';
-import { placeAssets } from './placement';
+import { centerCell, characterPlacement, placeAssets } from './placement';
 
 function asset(id: string, w: number, h: number): AssetDef {
   return { id, label: id, src: `/assets/${id}.png`, footprint: { w, h }, defaultCount: 1, scale: 1 };
@@ -62,5 +62,47 @@ describe('placeAssets', () => {
     const keys = result.placements.map((pl) => pl.col + pl.footprint.w + pl.row + pl.footprint.h);
     expect(keys).toEqual([...keys].sort((a, b) => a - b));
     expect(result.placements[0]).toMatchObject({ col: 0, row: 0 });
+  });
+
+  it('fixed 칸은 랜덤 배치가 점유 못함', () => {
+    // placeable: (0,0), (1,0) 두 칸 중 (1,0)을 fixed로 고정
+    const placeable = toPlaceableSet([[0, 0], [1, 0]]);
+    const fixedPlacement = { assetId: 'char', col: 1, row: 0, footprint: { w: 1, h: 1 } };
+    // 1x1 하나 요청 → fixed 칸(1,0)이 이미 점유됐으므로 (0,0)에 배치됨
+    const result = placeAssets(placeable, [{ asset: asset('tree', 1, 1), count: 1 }], seqRandom([0.9, 0]), [fixedPlacement]);
+    expect(result.placements).toContainEqual(expect.objectContaining({ assetId: 'tree', col: 0, row: 0 }));
+    expect(result.placements).not.toContainEqual(expect.objectContaining({ assetId: 'tree', col: 1, row: 0 }));
+  });
+
+  it('fixed가 결과에 포함되고 깊이 정렬됨', () => {
+    // fixed (5,5) + 랜덤 (0,0) → 결과 순서 [(0,0), (5,5)]
+    const placeable = toPlaceableSet([[0, 0]]);
+    const fixedPlacement = { assetId: 'char', col: 5, row: 5, footprint: { w: 1, h: 1 } };
+    const result = placeAssets(placeable, [{ asset: asset('tree', 1, 1), count: 1 }], seqRandom([0]), [fixedPlacement]);
+    expect(result.placements[0]).toMatchObject({ col: 0, row: 0 });
+    expect(result.placements[1]).toMatchObject({ col: 5, row: 5 });
+  });
+});
+
+describe('centerCell', () => {
+  it('{cols:26,rows:26} → (12,12)', () => {
+    const grid = { originX: 0, originY: 0, tileW: 64, cols: 26, rows: 26 };
+    expect(centerCell(grid)).toEqual({ col: 12, row: 12 });
+  });
+
+  it('{cols:3,rows:3} → (1,1)', () => {
+    const grid = { originX: 0, originY: 0, tileW: 64, cols: 3, rows: 3 };
+    expect(centerCell(grid)).toEqual({ col: 1, row: 1 });
+  });
+});
+
+describe('characterPlacement', () => {
+  it('CHARACTER를 centerCell에 배치', () => {
+    const grid = { originX: 0, originY: 0, tileW: 64, cols: 3, rows: 3 };
+    const pl = characterPlacement(grid);
+    expect(pl.col).toBe(1);
+    expect(pl.row).toBe(1);
+    expect(pl.assetId).toBe('character');
+    expect(pl.footprint).toEqual({ w: 1, h: 1 });
   });
 });
