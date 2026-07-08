@@ -57,7 +57,9 @@ export interface EllipseMask {
 
 /** 타원 마스크를 꽉 채우는 n×n 그리드 유도 */
 export function fitGridToMask(mask: EllipseMask, n: number): GridParams {
-  const tileW = Math.max((2 * mask.rx) / n, (4 * mask.ry) / n);
+  // 마름모 |x|/a + |y|/b <= 1 (a = n·tileW/2, b = n·tileW/4)가 타원을 포함하려면
+  // 접선 조건 √((rx/a)² + (ry/b)²) <= 1 이 필요 — 극점만 맞추면 대각선이 밖으로 샌다.
+  const tileW = (2 * Math.sqrt(mask.rx ** 2 + 4 * mask.ry ** 2)) / n;
   return {
     originX: mask.cx,
     originY: mask.cy - (n * tileW) / 4,

@@ -80,28 +80,34 @@ describe('cellsInEllipse', () => {
 });
 
 describe('fitGridToMask', () => {
-  it('가로 반지름이 지배하면 tileW = 2rx/n', () => {
-    // rx 700, ry 300, n 20 → max(70, 60) = 70
-    expect(fitGridToMask({ cx: 800, cy: 500, rx: 700, ry: 300 }, 20)).toEqual({
+  it('tileW = 2·√(rx²+4ry²)/n', () => {
+    // rx 300, ry 200 → √(90000+160000) = 500 → tileW = 1000/20 = 50
+    expect(fitGridToMask({ cx: 800, cy: 500, rx: 300, ry: 200 }, 20)).toEqual({
       originX: 800,
-      originY: 500 - (20 * 70) / 4,
-      tileW: 70,
+      originY: 500 - (20 * 50) / 4,
+      tileW: 50,
       cols: 20,
       rows: 20,
     });
   });
 
-  it('세로 반지름이 지배하면 tileW = 4ry/n', () => {
-    // rx 700, ry 430, n 20 → max(70, 86) = 86
-    const grid = fitGridToMask({ cx: 825, cy: 550, rx: 700, ry: 430 }, 20);
-    expect(grid.tileW).toBe(86);
-    expect(grid.originY).toBe(550 - (20 * 86) / 4); // 120
+  it('마름모가 타원 전체를 포함한다 — 대각선 방향 포함', () => {
+    const mask = { cx: 0, cy: 0, rx: 700, ry: 430 };
+    const grid = fitGridToMask(mask, 20);
+    const halfW = (grid.cols * grid.tileW) / 2;
+    const halfH = (grid.rows * grid.tileW) / 4;
+    // 타원 위 점 (rx·cosθ, ry·sinθ)가 전부 마름모 |x|/a + |y|/b <= 1 안
+    for (let deg = 0; deg < 360; deg += 5) {
+      const t = (deg * Math.PI) / 180;
+      const x = mask.rx * Math.cos(t);
+      const y = mask.ry * Math.sin(t);
+      expect(Math.abs(x) / halfW + Math.abs(y) / halfH).toBeLessThanOrEqual(1 + 1e-9);
+    }
   });
 
-  it('마름모가 타원을 포함한다 (반폭·반높이 >= 반지름)', () => {
-    const mask = { cx: 0, cy: 0, rx: 333, ry: 217 };
-    const grid = fitGridToMask(mask, 13);
-    expect((grid.cols * grid.tileW) / 2).toBeGreaterThanOrEqual(mask.rx);
-    expect((grid.rows * grid.tileW) / 4).toBeGreaterThanOrEqual(mask.ry);
+  it('마름모 중심 = 타원 중심', () => {
+    const grid = fitGridToMask({ cx: 825, cy: 550, rx: 700, ry: 430 }, 20);
+    expect(grid.originX).toBe(825);
+    expect(grid.originY + (grid.rows * grid.tileW) / 4).toBeCloseTo(550);
   });
 });
