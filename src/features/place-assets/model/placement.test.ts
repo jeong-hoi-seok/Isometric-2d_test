@@ -74,6 +74,61 @@ describe('placeAssets', () => {
     expect(result.placements).not.toContainEqual(expect.objectContaining({ assetId: 'tree', col: 1, row: 0 }));
   });
 
+  it('ctx+zone 메타 — 선호 존 밖 후보는 사실상 배제되고 존 내 후보 선택', () => {
+    const grid = { originX: 0, originY: 0, tileW: 2, cols: 20, rows: 20 };
+    const mask = { cx: 0, cy: 10, rx: 20, ry: 20 };
+    const placeable = toPlaceableSet([
+      [10, 10], // 블록 중심 (0, 10.5) → r ≈ 0.025 → 존(0.8~1) 밖 → 점수 ≈ 0
+      [18, 1], // 블록 중심 (17, 10) → r = 0.85 → 존 안 → 점수 1
+    ]);
+    const edgeAsset: AssetDef = {
+      ...asset('lighthouse', 1, 1),
+      placement: { zone: { min: 0.8, max: 1 } },
+    };
+    // rng=0.5여도 존 안 후보가 총점 대부분을 차지해 (18,1) 선택
+    const result = placeAssets(
+      placeable,
+      [{ asset: edgeAsset, count: 1 }],
+      seqRandom([0.5]),
+      [],
+      { grid, mask },
+    );
+    expect(result.placements).toEqual([
+      { assetId: 'lighthouse', col: 18, row: 1, footprint: { w: 1, h: 1 } },
+    ]);
+  });
+
+  it('ctx+cluster 메타 — 멤버가 시드 체비셰프 반경 내에 배치됨', () => {
+    const grid = { originX: 0, originY: 0, tileW: 2, cols: 20, rows: 20 };
+    const mask = { cx: 0, cy: 0, rx: 1e6, ry: 1e6 }; // 존 중립 대형 마스크
+    // 3x3 블록 + 멀리 떨어진 고립 칸
+    const pairs: [number, number][] = [];
+    for (let c = 0; c <= 2; c++) for (let r = 0; r <= 2; r++) pairs.push([c, r]);
+    pairs.push([15, 15]);
+    const placeable = toPlaceableSet(pairs);
+    const clusterAsset: AssetDef = {
+      ...asset('bush', 1, 1),
+      placement: { cluster: { min: 2, max: 2, radius: 2 } },
+    };
+    // splitGroups(2,2,2) = [2]: 시드 1 + 멤버 1
+    const result = placeAssets(
+      placeable,
+      [{ asset: clusterAsset, count: 2 }],
+      seqRandom([0]),
+      [],
+      { grid, mask },
+    );
+    expect(result.failedCount).toBe(0);
+    const anchors = result.placements.map((pl) => ({ col: pl.col, row: pl.row }));
+    expect(anchors).toHaveLength(2);
+    // 두 앵커 간 체비셰프 거리 <= radius(2) — 고립 칸 (15,15)는 선택되지 않음
+    const cheb = Math.max(
+      Math.abs(anchors[0].col - anchors[1].col),
+      Math.abs(anchors[0].row - anchors[1].row),
+    );
+    expect(cheb).toBeLessThanOrEqual(2);
+  });
+
   it('fixed가 결과에 포함되고 깊이 정렬됨', () => {
     // fixed (5,5) + 랜덤 (0,0) → 결과 순서 [(0,0), (5,5)]
     const placeable = toPlaceableSet([[0, 0]]);
