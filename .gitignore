@@ -27,3 +27,8 @@ dist-ssr
 *.sln
 *.sw?
 .vercel
+
+# env (API keys)
+.env
+.env.*
+!.env.example
