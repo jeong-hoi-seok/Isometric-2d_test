@@ -83,7 +83,7 @@ export function GridPanel() {
 
       <p className="text-sm text-muted-foreground">마킹된 칸: {placeable.size}</p>
       <Button onClick={handleExport}>JSON 내보내기 (클립보드)</Button>
-      {copied && <p className="text-sm text-emerald-400">클립보드에 복사됨</p>}
+      {copied && <p className="text-sm text-emerald-600">클립보드에 복사됨</p>}
       <p className="text-xs text-muted-foreground">
         캔버스에서 칸을 클릭/드래그해 배치 가능 영역을 마킹합니다. 저장하려면 JSON을
         src/entities/island-map/model/island-map.json에 붙여넣으세요.

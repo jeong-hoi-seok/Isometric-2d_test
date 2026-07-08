@@ -25,13 +25,12 @@ export function centerCell(grid: GridParams): { col: number; row: number } {
   };
 }
 
-/** CHARACTER를 그리드 중앙 칸에 고정 배치하는 Placement 반환 */
+/** CHARACTER footprint 블록이 그리드 중앙에 오도록 고정 배치하는 Placement 반환 */
 export function characterPlacement(grid: GridParams): Placement {
-  const { col, row } = centerCell(grid);
   return {
     assetId: CHARACTER.id,
-    col,
-    row,
+    col: Math.floor((grid.cols - CHARACTER.footprint.w) / 2),
+    row: Math.floor((grid.rows - CHARACTER.footprint.h) / 2),
     footprint: CHARACTER.footprint,
   };
 }

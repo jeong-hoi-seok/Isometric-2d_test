@@ -97,12 +97,13 @@ describe('centerCell', () => {
 });
 
 describe('characterPlacement', () => {
-  it('CHARACTER를 centerCell에 배치', () => {
-    const grid = { originX: 0, originY: 0, tileW: 64, cols: 3, rows: 3 };
+  it('CHARACTER footprint가 그리드 중앙에 오도록 앵커 계산', () => {
+    // 2x2 footprint, 26x26: anchor (12,12) → (12,12)~(13,13) 블록 중심 = 마름모 중심
+    const grid = { originX: 0, originY: 0, tileW: 64, cols: 26, rows: 26 };
     const pl = characterPlacement(grid);
-    expect(pl.col).toBe(1);
-    expect(pl.row).toBe(1);
+    expect(pl.col).toBe(12);
+    expect(pl.row).toBe(12);
     expect(pl.assetId).toBe('character');
-    expect(pl.footprint).toEqual({ w: 1, h: 1 });
+    expect(pl.footprint).toEqual({ w: 2, h: 2 });
   });
 });
