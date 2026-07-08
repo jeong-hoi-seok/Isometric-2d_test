@@ -40,12 +40,40 @@ export function characterPlacement(grid: GridParams): Placement {
   };
 }
 
+/** 각 에셋의 깊이 제어 메타 타입 */
+export type DepthMeta = { zBias?: number; layer?: 'ground' | 'object' };
+
+/**
+ * 깊이 정렬: 1차 layer(ground 전부 먼저), 2차 col+w+row+h+zBias 오름차순.
+ * metaById 없으면 zBias=0·layer='object' 취급 → 기존 정렬과 동일.
+ */
+export function sortByDepth(
+  placements: Placement[],
+  metaById: Record<string, DepthMeta> = {},
+): Placement[] {
+  return [...placements].sort((a, b) => {
+    const ma = metaById[a.assetId] ?? {};
+    const mb = metaById[b.assetId] ?? {};
+
+    // 1차: ground < object (ground가 앞(낮은 인덱스) → sort 시 음수)
+    const layerA = ma.layer === 'ground' ? 0 : 1;
+    const layerB = mb.layer === 'ground' ? 0 : 1;
+    if (layerA !== layerB) return layerA - layerB;
+
+    // 2차: col+w+row+h+zBias 오름차순
+    const keyA = a.col + a.footprint.w + a.row + a.footprint.h + (ma.zBias ?? 0);
+    const keyB = b.col + b.footprint.w + b.row + b.footprint.h + (mb.zBias ?? 0);
+    return keyA - keyB;
+  });
+}
+
 export function placeAssets(
   placeable: Set<string>,
   requests: { asset: AssetDef; count: number }[],
   random: () => number = Math.random,
   fixed: Placement[] = [],
   ctx?: PlacementContext,
+  metaById: Record<string, DepthMeta> = {},
 ): PlacementResult {
   // 후보 열거 순서 = placeable 삽입 순서 (결정성 보장)
   const cells = [...placeable].map((key) => key.split(',').map(Number) as [number, number]);
@@ -108,14 +136,10 @@ export function placeAssets(
     }
   }
 
-  // 깊이 정렬: footprint 앞쪽 모서리의 row+col 오름차순 = 뒤에서 앞으로 그림
-  placements.sort(
-    (a, b) =>
-      a.col + a.footprint.w + a.row + a.footprint.h -
-      (b.col + b.footprint.w + b.row + b.footprint.h),
-  );
+  // 깊이 정렬: sortByDepth (layer 파티션 → col+w+row+h+zBias 오름차순)
+  const depthSorted = sortByDepth(placements, metaById);
 
-  return { placements, failedCount };
+  return { placements: depthSorted, failedCount };
 }
 
 /**

@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import type { AssetDef } from '../../../entities/asset';
 import { toPlaceableSet } from '../../../entities/island-map';
-import { centerCell, characterPlacement, placeAssets } from './placement';
+import { centerCell, characterPlacement, placeAssets, sortByDepth } from './placement';
+import type { Placement } from './placement';
 
 function asset(id: string, w: number, h: number): AssetDef {
   return { id, label: id, src: `/assets/${id}.png`, footprint: { w, h }, defaultCount: 1, scale: 1 };
@@ -160,5 +161,47 @@ describe('characterPlacement', () => {
     expect(pl.row).toBe(12);
     expect(pl.assetId).toBe('character');
     expect(pl.footprint).toEqual({ w: 2, h: 2 });
+  });
+});
+
+describe('sortByDepth', () => {
+  function pl(assetId: string, col: number, row: number, w = 1, h = 1): Placement {
+    return { assetId, col, row, footprint: { w, h } };
+  }
+
+  it('zBias 동률 타이브레이크 — 동일 키 두 배치에서 zBias 큰 쪽이 뒤 인덱스', () => {
+    // col+w+row+h 키가 동일(2+1+2+1=6), zBias 0 vs 1
+    const a = pl('a', 2, 2); // key=6, zBias 미지정 → 0
+    const b = pl('b', 2, 2); // key=6, zBias 1 → 앞보다 앞에 그려져야 하므로 나중 인덱스
+    const meta = { b: { zBias: 1 } };
+    const sorted = sortByDepth([b, a], meta);
+    // zBias 큰 쪽(b)이 뒤 인덱스 → sorted[1]
+    expect(sorted[1].assetId).toBe('b');
+    expect(sorted[0].assetId).toBe('a');
+  });
+
+  it('ground layer가 깊이 키가 커도 먼저 그려짐 (앞 인덱스)', () => {
+    // ground: col=5,row=5 → key=12; object: col=0,row=0 → key=2
+    // 기본 깊이 정렬이라면 object가 먼저지만, ground는 무조건 먼저
+    const ground = pl('ground-decal', 5, 5);
+    const obj = pl('tree', 0, 0);
+    const meta = { 'ground-decal': { layer: 'ground' as const } };
+    const sorted = sortByDepth([obj, ground], meta);
+    expect(sorted[0].assetId).toBe('ground-decal');
+    expect(sorted[1].assetId).toBe('tree');
+  });
+
+  it('metaById 미전달 시 기존 정렬(col+w+row+h 오름차순)과 동일', () => {
+    const placements = [
+      pl('c', 5, 5),  // key=12
+      pl('a', 0, 0),  // key=2
+      pl('b', 3, 2),  // key=7
+    ];
+    const sorted = sortByDepth(placements);
+    const keys = sorted.map((p) => p.col + p.footprint.w + p.row + p.footprint.h);
+    expect(keys).toEqual([...keys].sort((x, y) => x - y));
+    expect(sorted[0].assetId).toBe('a');
+    expect(sorted[1].assetId).toBe('b');
+    expect(sorted[2].assetId).toBe('c');
   });
 });
