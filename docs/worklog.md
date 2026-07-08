@@ -2,6 +2,7 @@
 
 ## 2026-07-08
 
+- AI 배치 근거·토글: GPT 응답에 배치별 reason·전체 rationale(strict schema) 추가해 콘솔 노출, 'AI 배치 보정' 체크박스로 on/off(off=로컬 룰렛), 디버그 그리드 체크박스 제거. gpt-5 계열 reasoning_effort low 고정으로 28초→4.5초 (신세대 gpt-5.x는 minimal 미지원이라 low가 공통분모).
 - 깊이 제어 보강: 좌표 유도 깊이(painter's) 유지하며 zBias(동률 타이브레이커)·layer(ground 데칼) 메타 도입, GPT 프롬프트에 깊이 규칙(col+row 클수록 앞) 명시 — AI가 의도적 앞뒤 연출 가능.
 - AI 배치 도입: 배치 버튼이 /api/place(Vercel 함수)로 GPT(gpt-5-mini, strict structured output) 좌표를 받아 scoring 기반 검증·수리(스냅·채움) 후 배치. 실패·타임아웃·vite dev는 로컬 룰렛 자동 폴백. key는 서버 env로만 — 실호출 3.4초·군집/링 배치 확인.
 - 미적 배치 v1: 균등 랜덤을 메타데이터(존 선호·군집·최소 간격) 기반 가중치 룰렛 샘플링으로 교체 — 집이 중앙 공터에 놓이는 부적절 배치 교정, 허용(placeable)/선호(zone) 분리로 변칙성 유지. 신규 에셋 토스트·선풍기 등록. AI 배치(LLM 하이브리드)는 2단계 스펙으로 예정.

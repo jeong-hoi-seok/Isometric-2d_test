@@ -9,10 +9,10 @@ import { Input } from '@/shared/ui/input';
 export function PlacementPanel() {
   const counts = usePlacementStore((s) => s.counts);
   const failedCount = usePlacementStore((s) => s.failedCount);
-  const showGrid = usePlacementStore((s) => s.showGrid);
   const aiStatus = usePlacementStore((s) => s.aiStatus);
+  const aiEnabled = usePlacementStore((s) => s.aiEnabled);
   const setCount = usePlacementStore((s) => s.setCount);
-  const toggleGrid = usePlacementStore((s) => s.toggleGrid);
+  const toggleAi = usePlacementStore((s) => s.toggleAi);
   const runAiPlacement = usePlacementStore((s) => s.runAiPlacement);
   const placeable = useMapStore((s) => s.placeable);
   const grid = useMapStore((s) => s.grid);
@@ -49,6 +49,10 @@ export function PlacementPanel() {
       >
         {isLoading ? '배치 중…' : '배치'}
       </Button>
+      <label className="flex items-center gap-2 text-sm">
+        <Checkbox checked={aiEnabled} onCheckedChange={() => toggleAi()} />
+        AI 배치 보정
+      </label>
       {aiStatus === 'fallback' && (
         <p className="text-sm text-muted-foreground">AI 응답 실패 — 기본 배치 사용</p>
       )}
@@ -61,10 +65,6 @@ export function PlacementPanel() {
         </p>
       )}
 
-      <label className="flex items-center gap-2 text-sm">
-        <Checkbox checked={showGrid} onCheckedChange={() => toggleGrid()} />
-        디버그 그리드
-      </label>
     </div>
   );
 }
