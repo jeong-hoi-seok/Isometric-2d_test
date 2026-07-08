@@ -17,7 +17,7 @@ export const useMapStore = create<MapState>((set) => ({
   grid: defaultIslandMap.grid,
   placeable: toPlaceableSet(defaultIslandMap.placeable),
   ellipseMask: { cx: 825, cy: 550, rx: 700, ry: 430 },
-  gridN: 20,
+  gridN: 26,
   setGridN: (n) => set({ gridN: n }),
   paintCell: (col, row, target) =>
     set((state) => {
