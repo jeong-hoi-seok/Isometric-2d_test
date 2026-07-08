@@ -19,8 +19,11 @@ interface PlacementState {
   failedCount: number;
   showGrid: boolean;
   aiStatus: AiStatus;
+  /** AI 배치 사용 여부 — 끄면 항상 로컬 룰렛 */
+  aiEnabled: boolean;
   setCount: (id: string, count: number) => void;
   toggleGrid: () => void;
+  toggleAi: () => void;
   runPlacement: (
     placeable: Set<string>,
     grid: GridParams,
@@ -40,9 +43,11 @@ export const usePlacementStore = create<PlacementState>((set, get) => ({
   failedCount: 0,
   showGrid: false,
   aiStatus: 'idle',
+  aiEnabled: true,
   setCount: (id, count) =>
     set((state) => ({ counts: { ...state.counts, [id]: count } })),
   toggleGrid: () => set((state) => ({ showGrid: !state.showGrid })),
+  toggleAi: () => set((state) => ({ aiEnabled: !state.aiEnabled })),
   runPlacement: (placeable, grid, mask, random = Math.random) => {
     const requests = ASSETS.map((asset) => ({
       asset,
@@ -53,6 +58,11 @@ export const usePlacementStore = create<PlacementState>((set, get) => ({
     set({ placements: result.placements, failedCount: result.failedCount });
   },
   runAiPlacement: async (placeable, grid, mask) => {
+    if (!get().aiEnabled) {
+      get().runPlacement(placeable, grid, mask);
+      set({ aiStatus: 'idle' });
+      return;
+    }
     set({ aiStatus: 'loading' });
 
     const counts = get().counts;
@@ -79,13 +89,21 @@ export const usePlacementStore = create<PlacementState>((set, get) => ({
     try {
       // 8초 타임아웃
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 8000);
+      // reason 서술 생성 때문에 응답이 길어질 수 있어 30초까지 허용
+      const timeoutId = setTimeout(() => controller.abort(), 30000);
 
-      let rawPlacements: { assetId: string; col: number; row: number }[];
+      let response: Awaited<ReturnType<typeof fetchAiPlacements>>;
       try {
-        rawPlacements = await fetchAiPlacements(scene, controller.signal);
+        response = await fetchAiPlacements(scene, controller.signal);
       } finally {
         clearTimeout(timeoutId);
+      }
+      const rawPlacements = response.placements;
+
+      // 배치 근거 콘솔 노출
+      if (response.rationale) console.log('[AI 배치] 컨셉:', response.rationale);
+      for (const pl of rawPlacements) {
+        if (pl.reason) console.log(`[AI 배치] ${pl.assetId} (${pl.col},${pl.row}):`, pl.reason);
       }
 
       // requests를 repairPlacements 형식으로 변환

@@ -38,12 +38,17 @@ export default async function handler(
 - assets 목록의 count만큼만 배치합니다 (초과 배치 금지).
 - 깊이는 col+row가 클수록 화면 앞. 어떤 에셋을 다른 에셋 앞에 보이게 하려면 더 큰 col+row 칸을 골라라. 겹쳐 보이는 연출(나무 뒤 벤치 등)은 인접 칸 + col+row 차이로 만든다.
 
+각 배치의 reason에 왜 그 위치인지 한국어로 아주 짧게(20자 이내, 예: "가장자리 링, 군집 뒤쪽") 쓰고,
+rationale에 전체 배치 컨셉을 한국어 한 문장으로 요약하세요. 서술이 길면 안 됩니다.
+
 요청한 모든 에셋의 좌표를 JSON으로 반환하세요.`;
 
   const userContent = JSON.stringify(req.body);
 
   const requestBody = {
     model,
+    // gpt-5 계열은 추론 시간이 배치 UX를 해쳐 최소로 고정
+    ...(model.startsWith('gpt-5') ? { reasoning_effort: 'low' } : {}),
     messages: [
       { role: 'system', content: systemPrompt },
       { role: 'user', content: userContent },
@@ -64,13 +69,15 @@ export default async function handler(
                   assetId: { type: 'string' },
                   col: { type: 'integer' },
                   row: { type: 'integer' },
+                  reason: { type: 'string' },
                 },
-                required: ['assetId', 'col', 'row'],
+                required: ['assetId', 'col', 'row', 'reason'],
                 additionalProperties: false,
               },
             },
+            rationale: { type: 'string' },
           },
-          required: ['placements'],
+          required: ['placements', 'rationale'],
           additionalProperties: false,
         },
       },
@@ -78,6 +85,7 @@ export default async function handler(
   };
 
   let openAiResponse: Response;
+  const t0 = Date.now();
   try {
     openAiResponse = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
@@ -93,6 +101,8 @@ export default async function handler(
     res.status(502).json({ error: 'OpenAI request failed' });
     return;
   }
+
+  console.log(`[place] OpenAI latency: ${Date.now() - t0}ms`);
 
   if (!openAiResponse.ok) {
     const detail = await openAiResponse.text().catch(() => '');

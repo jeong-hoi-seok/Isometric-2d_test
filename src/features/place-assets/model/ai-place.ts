@@ -38,10 +38,24 @@ export interface RepairContext {
 // ---------------------------------------------------------------------------
 // fetchAiPlacements — POST /api/place 호출
 // ---------------------------------------------------------------------------
+export interface AiPlacementRaw {
+  assetId: string;
+  col: number;
+  row: number;
+  /** GPT가 서술한 배치 근거 (한국어 한 문장) */
+  reason?: string;
+}
+
+export interface AiPlacementResponse {
+  placements: AiPlacementRaw[];
+  /** 전체 배치 컨셉 요약 */
+  rationale?: string;
+}
+
 export async function fetchAiPlacements(
   scene: AiScene,
   signal?: AbortSignal,
-): Promise<{ assetId: string; col: number; row: number }[]> {
+): Promise<AiPlacementResponse> {
   const res = await fetch('/api/place', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -59,8 +73,8 @@ export async function fetchAiPlacements(
     throw new Error(`/api/place returned non-JSON content-type: ${contentType}`);
   }
 
-  const data = (await res.json()) as { placements: { assetId: string; col: number; row: number }[] };
-  return data.placements;
+  const data = (await res.json()) as AiPlacementResponse;
+  return data;
 }
 
 // ---------------------------------------------------------------------------
