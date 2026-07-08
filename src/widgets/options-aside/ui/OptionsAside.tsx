@@ -12,7 +12,7 @@ interface Props {
 export function OptionsAside({ activeTab, onTabChange }: Props) {
   return (
     <aside className="flex h-screen w-72 shrink-0 flex-col gap-4 overflow-y-auto border-r border-border bg-card/50 p-4">
-      <h1 className="text-lg font-semibold">아이소메트릭 섬 배치</h1>
+      <h1 className="text-lg font-semibold">섬 랜덤 배치 테스트</h1>
       <Tabs value={activeTab} onValueChange={(value) => onTabChange(value as AsideTab)}>
         <TabsList className="w-full">
           <TabsTrigger value="place" className="flex-1">

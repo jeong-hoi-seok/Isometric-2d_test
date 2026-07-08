@@ -7,6 +7,9 @@ import { usePlacementStore } from './store';
 
 const initialState = usePlacementStore.getState();
 
+// 존 점수가 결과에 영향을 주지 않도록 하는 중립 대형 마스크
+const largeMask = { cx: 0, cy: 0, rx: 1e6, ry: 1e6 };
+
 beforeEach(() => {
   usePlacementStore.setState(initialState, true);
 });
@@ -45,7 +48,7 @@ describe('usePlacementStore', () => {
     // — 에셋 footprint 튜닝에 깨지지 않도록 좌표를 고정 단언하지 않는다
     const pairs: [number, number][] = [];
     for (let c = 0; c <= 3; c++) for (let r = 0; r <= 3; r++) pairs.push([c, r]);
-    runPlacement(toPlaceableSet(pairs), grid, () => 0);
+    runPlacement(toPlaceableSet(pairs), grid, largeMask, () => 0);
     const { placements, failedCount } = usePlacementStore.getState();
     expect(placements).toContainEqual(expect.objectContaining({ assetId: 'tree' }));
     expect(placements).toContainEqual(expect.objectContaining({ assetId: 'character' }));
@@ -54,7 +57,7 @@ describe('usePlacementStore', () => {
 
   it('빈 placeable이면 랜덤 배치 전부 실패, 캐릭터는 여전히 고정 배치', () => {
     const grid = defaultIslandMap.grid;
-    usePlacementStore.getState().runPlacement(new Set(), grid);
+    usePlacementStore.getState().runPlacement(new Set(), grid, largeMask);
     const { placements, failedCount } = usePlacementStore.getState();
     expect(placements).toHaveLength(1);
     expect(placements[0]).toMatchObject({ assetId: 'character' });

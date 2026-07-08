@@ -15,6 +15,7 @@ export function PlacementPanel() {
   const runPlacement = usePlacementStore((s) => s.runPlacement);
   const placeable = useMapStore((s) => s.placeable);
   const grid = useMapStore((s) => s.grid);
+  const ellipseMask = useMapStore((s) => s.ellipseMask);
 
   return (
     <div className="flex flex-col gap-4">
@@ -39,7 +40,7 @@ export function PlacementPanel() {
         </CardContent>
       </Card>
 
-      <Button onClick={() => runPlacement(placeable, grid)}>배치</Button>
+      <Button onClick={() => runPlacement(placeable, grid, ellipseMask)}>배치</Button>
       {failedCount > 0 && (
         <p className="text-sm text-destructive">{failedCount}개 배치 실패</p>
       )}
