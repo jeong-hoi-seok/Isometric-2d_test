@@ -38,14 +38,14 @@ describe('useMapStore', () => {
 
 describe('ellipseMask', () => {
   it('초기값', () => {
-    expect(useMapStore.getState().ellipseMask).toEqual({ cx: 825, cy: 550, rx: 700, ry: 430 });
+    expect(useMapStore.getState().ellipseMask).toEqual({ cx: 710, cy: 465, rx: 590, ry: 370 });
   });
 
   it('setEllipseMask 부분 갱신', () => {
     useMapStore.getState().setEllipseMask({ rx: 500 });
     const { ellipseMask } = useMapStore.getState();
     expect(ellipseMask.rx).toBe(500);
-    expect(ellipseMask.cy).toBe(550);
+    expect(ellipseMask.cy).toBe(465);
   });
 
   it('applyEllipseMask가 grid를 마스크에 맞춰 유도하고 placeable 교체', () => {
