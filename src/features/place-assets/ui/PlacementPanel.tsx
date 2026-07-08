@@ -10,12 +10,15 @@ export function PlacementPanel() {
   const counts = usePlacementStore((s) => s.counts);
   const failedCount = usePlacementStore((s) => s.failedCount);
   const showGrid = usePlacementStore((s) => s.showGrid);
+  const aiStatus = usePlacementStore((s) => s.aiStatus);
   const setCount = usePlacementStore((s) => s.setCount);
   const toggleGrid = usePlacementStore((s) => s.toggleGrid);
-  const runPlacement = usePlacementStore((s) => s.runPlacement);
+  const runAiPlacement = usePlacementStore((s) => s.runAiPlacement);
   const placeable = useMapStore((s) => s.placeable);
   const grid = useMapStore((s) => s.grid);
   const ellipseMask = useMapStore((s) => s.ellipseMask);
+
+  const isLoading = aiStatus === 'loading';
 
   return (
     <div className="flex flex-col gap-4">
@@ -40,7 +43,15 @@ export function PlacementPanel() {
         </CardContent>
       </Card>
 
-      <Button onClick={() => runPlacement(placeable, grid, ellipseMask)}>배치</Button>
+      <Button
+        disabled={isLoading}
+        onClick={() => void runAiPlacement(placeable, grid, ellipseMask)}
+      >
+        {isLoading ? '배치 중…' : '배치'}
+      </Button>
+      {aiStatus === 'fallback' && (
+        <p className="text-sm text-muted-foreground">AI 응답 실패 — 기본 배치 사용</p>
+      )}
       {failedCount > 0 && (
         <p className="text-sm text-destructive">{failedCount}개 배치 실패</p>
       )}
