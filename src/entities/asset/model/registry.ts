@@ -10,9 +10,9 @@ export interface AssetDef {
 }
 
 export const ASSETS: AssetDef[] = [
-  { id: 'home', label: '집', src: '/assets/home.png', footprint: { w: 2, h: 2 }, defaultCount: 1, scale: 1 },
-  { id: 'tree', label: '나무', src: '/assets/tree.png', footprint: { w: 1, h: 1 }, defaultCount: 1, scale: 1 },
-];
+  { id: 'home', label: '집', src: '/assets/home.png', footprint: { w: 4, h: 4 }, defaultCount: 1, scale: 1 },
+  { id: 'tree', label: '나무', src: '/assets/tree.png', footprint: { w: 2, h: 2 }, defaultCount: 1, scale: 1 },
+]
 
 export const CHARACTER: AssetDef = {
   id: 'character',

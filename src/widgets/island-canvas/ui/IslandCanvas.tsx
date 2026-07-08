@@ -43,6 +43,9 @@ export function IslandCanvas({
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const paintingRef = useRef(false);
   const scaleById = Object.fromEntries(assets.map((a) => [a.id, a.scale]));
+  // 위쪽 칸에 배치된 스프라이트가 캔버스 밖(y<0)으로 잘리지 않게 상단 여백 확보.
+  // 현 에셋군의 최대 상단 돌출은 tileW 수준이라 1.5배로 여유를 둔다.
+  const padTop = Math.ceil(grid.tileW * 1.5);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -50,8 +53,10 @@ export function IslandCanvas({
     if (!canvas || !ctx) return;
 
     canvas.width = islandImg.naturalWidth;
-    canvas.height = islandImg.naturalHeight;
+    canvas.height = islandImg.naturalHeight + padTop;
     ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.save();
+    ctx.translate(0, padTop);
     ctx.drawImage(islandImg, 0, 0);
 
     if (showGrid) drawGridOverlay(ctx, grid, placeableSet, showCandidates);
@@ -69,6 +74,7 @@ export function IslandCanvas({
       );
       ctx.drawImage(img, rect.x, rect.y, rect.width, rect.height);
     }
+    ctx.restore();
   });
 
   function paintAt(clientX: number, clientY: number) {
@@ -76,7 +82,7 @@ export function IslandCanvas({
     if (!canvas || !onCellPaint) return;
     const domRect = canvas.getBoundingClientRect();
     const x = ((clientX - domRect.left) * canvas.width) / domRect.width;
-    const y = ((clientY - domRect.top) * canvas.height) / domRect.height;
+    const y = ((clientY - domRect.top) * canvas.height) / domRect.height - padTop;
     const { col, row } = screenToGrid(grid, x, y);
     if (isInside(grid, col, row)) onCellPaint(col, row);
   }
