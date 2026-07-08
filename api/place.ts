@@ -88,16 +88,15 @@ export default async function handler(
     });
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
-    res.status(502).json({ error: 'OpenAI request failed', detail: message });
+    console.error('OpenAI request failed:', message);
+    res.status(502).json({ error: 'OpenAI request failed' });
     return;
   }
 
   if (!openAiResponse.ok) {
     const detail = await openAiResponse.text().catch(() => '');
-    res.status(502).json({
-      error: `OpenAI returned ${openAiResponse.status}`,
-      detail,
-    });
+    console.error(`OpenAI returned ${openAiResponse.status}:`, detail);
+    res.status(502).json({ error: `OpenAI returned ${openAiResponse.status}` });
     return;
   }
 
@@ -106,7 +105,8 @@ export default async function handler(
     data = (await openAiResponse.json()) as typeof data;
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
-    res.status(502).json({ error: 'Failed to parse OpenAI response', detail: message });
+    console.error('Failed to parse OpenAI response:', message);
+    res.status(502).json({ error: 'Failed to parse OpenAI response' });
     return;
   }
 
@@ -121,7 +121,8 @@ export default async function handler(
     parsed = JSON.parse(content);
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
-    res.status(502).json({ error: 'OpenAI content is not valid JSON', detail: message });
+    console.error('OpenAI content is not valid JSON:', message);
+    res.status(502).json({ error: 'OpenAI content is not valid JSON' });
     return;
   }
 
